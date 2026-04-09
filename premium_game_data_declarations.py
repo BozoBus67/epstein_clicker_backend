@@ -1,0 +1,15 @@
+INITIAL_PREMIUM_GAME_DATA = {
+  "tokens": 0,
+  "account_tier": "free",
+  "login_streak": 0,
+  "mastery_scroll_1": 0,
+  "mastery_scroll_2": 0,
+  "mastery_scroll_3": 0,
+  "mastery_scroll_4": 0,
+  "mastery_scroll_5": 0,
+  "mastery_scroll_6": 0,
+  "mastery_scroll_7": 0,
+  "mastery_scroll_8": 0,
+  "mastery_scroll_9": 0,
+  "mastery_scroll_10": 0,
+}

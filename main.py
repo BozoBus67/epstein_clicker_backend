@@ -1,42 +1,33 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import stripe
 import os
-from supabase import create_client
 
 load_dotenv()
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
-
-supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+from payments import router as payments_router
+from tokens import router as tokens_router
+from auction_house import router as auction_house_router
+from mastery_scrolls import router as mastery_scrolls_router
+from signup import router as signup_router
 
 app = FastAPI()
 
+app.add_middleware(
+  CORSMiddleware,
+  allow_origins=["*"],
+  allow_methods=["*"],
+  allow_headers=["*"],
+)
+
+app.include_router(payments_router)
+app.include_router(tokens_router)
+app.include_router(auction_house_router)
+app.include_router(mastery_scrolls_router)
+app.include_router(signup_router)
+
 @app.get("/")
 def root():
-  return {"status": "ok"}
-
-@app.post("/premium_payment_1")
-async def premium_payment_1(request: Request):
-  payload = await request.body()
-  sig_header = request.headers.get("stripe-signature")
-
-  try:
-    event = stripe.Webhook.construct_event(
-      payload, sig_header, STRIPE_WEBHOOK_SECRET
-    )
-  except Exception:
-    raise HTTPException(status_code=400, detail="Invalid signature")
-
-  if event["type"] == "checkout.session.completed":
-    session = event["data"]["object"]
-    username = session["client_reference_id"]
-
-    if username:
-      supabase.table("User_Login_Data").update(
-        {"account_tier": "premium"}
-      ).eq("username", username).execute()
-
   return {"status": "ok"}
