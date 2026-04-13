@@ -1,0 +1,21 @@
+INITIAL_GAME_DATA = {
+  "version": 1,
+  "quantity": 0,
+  "cps": 0,
+  "cookies_per_click": 1,
+  "buildings": {
+    "building_1": 0,
+    "building_2": 0,
+    "building_3": 0,
+    "building_4": 0,
+    "building_5": 0,
+    "building_6": 0,
+    "building_7": 0,
+    "building_8": 0,
+    "building_9": 0,
+    "building_10": 0,
+    "building_11": 0,
+    "building_12": 0,
+    "building_13": 0,
+  },
+}

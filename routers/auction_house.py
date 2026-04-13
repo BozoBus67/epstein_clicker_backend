@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Literal
 from utils import require_user
-from initialisations_and_declarations.db_initialization import supabase
+from initializations_and_declarations.db_initialization import supabase
 
 router = APIRouter()
 
