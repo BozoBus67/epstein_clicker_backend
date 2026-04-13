@@ -1,7 +1,8 @@
 import random
 from fastapi import HTTPException
-from initialisations_and_declarations.db_initialization import supabase
-from initialisations_and_declarations.scroll_declarations import SCROLL_TIERS, MASTERY_SCROLLS
+from initializations_and_declarations.db_initialization import supabase
+from initializations_and_declarations.scroll_declarations import SCROLL_TIERS, MASTERY_SCROLLS
+from initializations_and_declarations.game_data_declarations import INITIAL_GAME_DATA
 import constants.constants as Constants
 
 def get_user(username: str):
@@ -17,6 +18,15 @@ def require_user(username: str):
   if not user:
     raise HTTPException(status_code=404, detail="User not found")
   return user
+
+def migrate_game_data(saved: dict) -> dict:
+  migrated = {**INITIAL_GAME_DATA, **saved}
+  migrated["buildings"] = {
+    **INITIAL_GAME_DATA["buildings"],
+    **saved.get("buildings", {}),
+  }
+  migrated["version"] = INITIAL_GAME_DATA["version"]
+  return migrated
 
 def get_scroll_tier(count: int) -> int:
   tier = 0

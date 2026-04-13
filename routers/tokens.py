@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from datetime import date, timedelta, timezone
+from datetime import datetime, date, timedelta, timezone
 from initialisations_and_declarations.db_initialization import supabase
 from utils import require_user
 
@@ -16,44 +16,48 @@ class SpendRequest(BaseModel):
 @router.post("/daily_checkin")
 def daily_checkin(body: UsernameRequest):
   user = require_user(body.username)
+  pgd = user["premium_game_data"]
 
-  today = date.today(timezone.utc).isoformat()
-  last = user["last_login_date"]
-  streak = user["login_streak"]
-  tokens = user["premium_tokens"]
+  today = datetime.now(timezone.utc).date().isoformat()
+  last = pgd["last_login_date"]
+  streak = pgd["login_streak"]
+  tokens = pgd["premium_tokens"]
 
   if last == today:
     return {"already_checked_in": True, "tokens": tokens, "streak": streak}
 
-  yesterday = (date.today(timezone.utc) - timedelta(days=1)).isoformat()
+  yesterday = (datetime.now(timezone.utc).date() - timedelta(days=1)).isoformat()
   streak = streak + 1 if last == yesterday else 1
   tokens_to_grant = streak
 
+  pgd["premium_tokens"] = tokens + tokens_to_grant
+  pgd["last_login_date"] = today
+  pgd["login_streak"] = streak
+
   supabase.table("User_Login_Data").update({
-    "premium_tokens": tokens + tokens_to_grant,
-    "last_login_date": today,
-    "login_streak": streak
+    "premium_game_data": pgd
   }).eq("username", body.username).execute()
 
   return {
     "already_checked_in": False,
     "tokens": tokens + tokens_to_grant,
     "streak": streak,
-    "tokens_granted": tokens_to_grant
+    "tokens_granted": tokens_to_grant,
   }
 
 @router.post("/spend_tokens")
 def spend_tokens(body: SpendRequest):
   user = require_user(body.username)
+  pgd = user["premium_game_data"]
 
-  tokens = user["premium_tokens"]
+  tokens = pgd["premium_tokens"]
   if tokens < body.amount:
     raise HTTPException(status_code=400, detail="Not enough tokens")
 
-  new_balance = tokens - body.amount
+  pgd["premium_tokens"] = tokens - body.amount
 
   supabase.table("User_Login_Data").update({
-    "premium_tokens": new_balance
+    "premium_game_data": pgd
   }).eq("username", body.username).execute()
 
-  return {"tokens": new_balance}
+  return {"tokens": pgd["premium_tokens"]}
