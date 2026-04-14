@@ -11,23 +11,30 @@ class LoginRequest(BaseModel):
 
 @router.post("/login")
 def login(body: LoginRequest):
-  if "@" in body.username_or_email:
-    email = body.username_or_email
-  else:
-    row = supabase.table("User_Login_Data").select("email").eq(
+  # try treating input as email first, then fall back to username lookup
+  try:
+    auth_result = supabase.auth.sign_in_with_password({
+      "email": body.username_or_email,
+      "password": body.password,
+    })
+  except Exception:
+    row = supabase.table("User_Login_Data").select("id").eq(
       "username", body.username_or_email
     ).execute()
     if not row.data:
       raise HTTPException(status_code=401, detail="Invalid credentials")
-    email = row.data[0]["email"]
 
-  try:
-    auth_result = supabase.auth.sign_in_with_password({
-      "email": email,
-      "password": body.password,
-    })
-  except Exception:
-    raise HTTPException(status_code=401, detail="Invalid credentials")
+    auth_user = supabase.auth.admin.get_user_by_id(row.data[0]["id"])
+    if not auth_user.user:
+      raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    try:
+      auth_result = supabase.auth.sign_in_with_password({
+        "email": auth_user.user.email,
+        "password": body.password,
+      })
+    except Exception:
+      raise HTTPException(status_code=401, detail="Invalid credentials")
 
   user_id = auth_result.user.id
   jwt = auth_result.session.access_token
