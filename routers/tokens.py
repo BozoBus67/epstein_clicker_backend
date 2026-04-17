@@ -1,13 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends
 from datetime import datetime, timedelta, timezone
 from initializations_and_declarations.db_initialization import supabase
 from utils import require_user
 
 router = APIRouter()
-
-class SpendRequest(BaseModel):
-  amount: int
 
 @router.post("/daily_checkin")
 def daily_checkin(user=Depends(require_user)):
@@ -42,22 +38,3 @@ def daily_checkin(user=Depends(require_user)):
     "streak": streak,
     "tokens_granted": tokens_to_grant,
   }
-
-@router.post("/spend_tokens")
-def spend_tokens(body: SpendRequest, user=Depends(require_user)):
-  result = supabase.table("User_Login_Data").select(
-    "premium_game_data"
-  ).eq("id", user.id).single().execute()
-  pgd = result.data["premium_game_data"]
-
-  tokens = pgd["tokens"]
-  if tokens < body.amount:
-    raise HTTPException(status_code=400, detail="Not enough tokens")
-
-  pgd["tokens"] = tokens - body.amount
-
-  supabase.table("User_Login_Data").update({
-    "premium_game_data": pgd
-  }).eq("id", user.id).execute()
-
-  return {"tokens": pgd["tokens"]}

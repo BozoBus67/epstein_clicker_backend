@@ -48,6 +48,37 @@ def increase_mastery_scroll(user_uuid: str, scroll_id: str, amount: int = 1):
     .eq("id", user_uuid)
     .execute())
 
+def add_tokens(user_uuid: str, amount: int):
+  user = (supabase.table("User_Login_Data")
+    .select("premium_game_data")
+    .eq("id", user_uuid)
+    .single()
+    .execute()
+    .data)
+  pgd = user["premium_game_data"]
+  pgd["tokens"] = pgd["tokens"] + amount
+  (supabase.table("User_Login_Data")
+    .update({"premium_game_data": pgd})
+    .eq("id", user_uuid)
+    .execute())
+
+def spend_tokens(user_uuid: str, amount: int):
+  user = (supabase.table("User_Login_Data")
+    .select("premium_game_data")
+    .eq("id", user_uuid)
+    .single()
+    .execute()
+    .data)
+  pgd = user["premium_game_data"]
+  if pgd["tokens"] < amount:
+    raise HTTPException(status_code=400, detail="Not enough tokens")
+  pgd["tokens"] = pgd["tokens"] - amount
+  (supabase.table("User_Login_Data")
+    .update({"premium_game_data": pgd})
+    .eq("id", user_uuid)
+    .execute())
+  return pgd["tokens"]
+
 def get_random_scroll_id() -> str:
   return random.choice(list(MASTERY_SCROLLS.keys()))
 
