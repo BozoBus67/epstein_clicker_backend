@@ -18,7 +18,7 @@ def signup(body: SignUpRequest):
     auth_result = supabase.auth.admin.create_user({
       "email": body.email,
       "password": body.password,
-      "email_confirm": False,
+      "email_confirm": True,
     })
   except Exception as e:
     msg = str(e).lower()
