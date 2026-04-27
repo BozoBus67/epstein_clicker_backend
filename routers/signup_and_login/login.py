@@ -20,7 +20,9 @@ def login(body: LoginRequest):
       "email": body.username_or_email,
       "password": body.password,
     })
-  except Exception:
+  except Exception as e:
+    if "Email not confirmed" in str(e):
+      raise HTTPException(status_code=401, detail="Please confirm your email before logging in.")
 
     # look up the username in our table to get the uuid
     row = supabase.table("User_Login_Data").select("id").eq(
@@ -47,7 +49,9 @@ def login(body: LoginRequest):
         "email": email,
         "password": body.password,
       })
-    except Exception:
+    except Exception as e:
+      if "Email not confirmed" in str(e):
+        raise HTTPException(status_code=401, detail="Please confirm your email before logging in.")
       raise HTTPException(status_code=401, detail=INVALID_CREDENTIALS)
 
   user_id = auth_result.user.id
