@@ -18,7 +18,7 @@ def signup(body: SignUpRequest):
     auth_result = supabase.auth.admin.create_user({
       "email": body.email,
       "password": body.password,
-      "email_confirm": False,  # user must confirm email before logging in
+      "email_confirm": True,
     })
   except Exception:
     raise HTTPException(status_code=409, detail="Email already registered")
