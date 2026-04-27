@@ -38,4 +38,9 @@ def signup(body: SignUpRequest):
     supabase.auth.admin.delete_user(user_id)
     raise HTTPException(status_code=409, detail="Username already taken")
 
+  supabase.auth.admin.generate_link({
+    "type": "signup",
+    "email": body.email,
+  })
+
   return {"status": "ok"}
