@@ -17,7 +17,7 @@ from routers.signup_and_login.me import router as me_router
 from routers.account_tiers import router as account_tiers_router
 from routers.game_data import router as game_data_router
 from routers.gamble import router as gamble_router
-from routers.three_assumptions_poisson import router as three_assumptions_poisson_router
+from routers.redeem.three_assumptions_poisson import router as three_assumptions_poisson_router
 
 app = FastAPI()
 
