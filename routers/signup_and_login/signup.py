@@ -23,11 +23,12 @@ class SignUpRequest(BaseModel):
 
 @router.post("/signup")
 def signup(body: SignUpRequest):
+  # Step 1: create user in Supabase auth (email_confirm=True skips email verification)
   try:
     auth_result = supabase.auth.admin.create_user({
       "email": body.email,
       "password": body.password,
-      "email_confirm": True,
+      "email_confirm": False,
     })
   except Exception as e:
     print(f"[signup] create_user error: {e}")
@@ -44,6 +45,7 @@ def signup(body: SignUpRequest):
 
   user_id = auth_result.user.id
 
+  # Step 2: insert game data row — if this fails, delete the auth user to keep things consistent
   try:
     supabase.table("User_Login_Data").insert({
       "id": user_id,
@@ -54,12 +56,13 @@ def signup(body: SignUpRequest):
     }).execute()
   except Exception as e:
     print(f"[signup] User_Login_Data insert error: {e}")
-    supabase.auth.admin.delete_user(user_id)
+    supabase.auth.admin.delete_user(user_id)  # rollback auth user
     msg = str(e).lower()
     if "duplicate" in msg or "unique" in msg:
       raise HTTPException(status_code=409, detail="Username already taken")
     raise HTTPException(status_code=500, detail=f"Failed to save account data: {e}")
 
+  # Step 3: auto-login so the user lands in the game immediately after signup
   try:
     auth_result = supabase.auth.sign_in_with_password({"email": body.email, "password": body.password})
   except Exception as e:
