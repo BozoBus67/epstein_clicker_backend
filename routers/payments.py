@@ -1,10 +1,7 @@
 from fastapi import APIRouter, Request, HTTPException
-from dotenv import load_dotenv
 import stripe
 import os
-from initializations_and_declarations.db_initialization import supabase
-
-load_dotenv()
+from db.client import supabase
 
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
@@ -16,9 +13,7 @@ async def premium_payment_1(request: Request):
   sig_header = request.headers.get("stripe-signature")
 
   try:
-    event = stripe.Webhook.construct_event(
-      payload, sig_header, STRIPE_WEBHOOK_SECRET
-    )
+    event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
   except Exception:
     raise HTTPException(status_code=400, detail="Invalid signature")
 
@@ -27,14 +22,8 @@ async def premium_payment_1(request: Request):
     user_id = session["client_reference_id"]
 
     if user_id:
-      supabase.table("User_Login_Data").update({
-        "premium_game_data": supabase.table("User_Login_Data")
-          .select("premium_game_data")
-          .eq("id", user_id)
-          .single()
-          .execute()
-          .data["premium_game_data"] | {"account_tier": "premium"}
-      }).eq("id", user_id).execute()
+      pgd = supabase.table("User_Login_Data").select("premium_game_data").eq("id", user_id).single().execute().data["premium_game_data"]
+      supabase.table("User_Login_Data").update({"premium_game_data": pgd | {"account_tier": "premium"}}).eq("id", user_id).execute()
     else:
       print("WARNING: no client_reference_id in checkout session")
 

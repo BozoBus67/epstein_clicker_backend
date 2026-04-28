@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
-from initializations_and_declarations.db_initialization import supabase
-from utils import require_user, migrate_game_data
+from db.client import supabase
+from services.auth import require_user
+from services.game_data import migrate_game_data
 
 router = APIRouter()
 

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from initializations_and_declarations.scroll_declarations import MASTERY_SCROLLS
+from data.scrolls import MASTERY_SCROLLS
 
 router = APIRouter()
 

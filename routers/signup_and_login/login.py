@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from initializations_and_declarations.db_initialization import supabase
-from utils import migrate_game_data
+from db.client import supabase
+from services.game_data import migrate_game_data
 
 router = APIRouter()
 
@@ -15,20 +15,15 @@ class LoginRequest(BaseModel):
 def login(body: LoginRequest):
   email = body.username_or_email
 
-  # no @ means it's a username — resolve it to an email via our table
   if "@" not in body.username_or_email:
     row = supabase.table("User_Login_Data").select("id").eq("username", body.username_or_email).execute()
     if not row.data:
       raise HTTPException(status_code=401, detail=INVALID_CREDENTIALS)
-
     auth_user = supabase.auth.admin.get_user_by_id(row.data[0]["id"])
     if not auth_user.user:
-      # username row exists but auth row is gone — shouldn't happen, means data got out of sync
       raise HTTPException(status_code=500, detail="Account inconsistency — contact support")
-
     email = auth_user.user.email
 
-  # auth table
   try:
     auth_result = supabase.auth.sign_in_with_password({"email": email, "password": body.password})
   except Exception as e:
@@ -45,17 +40,12 @@ def login(body: LoginRequest):
   user_id = auth_result.user.id
   jwt = auth_result.session.access_token
 
-  # user data table
   result = supabase.table("User_Login_Data").select("*").eq("id", user_id).execute()
-
-  # email lives in auth, not our table — pull it from the verified session
-  email = auth_result.user.email
-
   if not result.data:
     raise HTTPException(status_code=404, detail="Account data not found — contact support")
 
   user = result.data[0]
-  user["email"] = email
+  user["email"] = auth_result.user.email
   user["game_data"] = migrate_game_data(user["game_data"])
 
   return {"status": "ok", "jwt": jwt, "refresh_token": auth_result.session.refresh_token, "user": user}

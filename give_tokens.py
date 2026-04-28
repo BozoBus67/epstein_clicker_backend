@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from initializations_and_declarations.db_initialization import supabase
+from db.client import supabase
 
 USERNAME = "user1"
 TOKENS = 9999

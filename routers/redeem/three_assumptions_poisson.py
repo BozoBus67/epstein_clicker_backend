@@ -1,7 +1,8 @@
 import re
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from utils import require_user, add_tokens
+from services.auth import require_user
+from services.tokens import add_tokens
 
 router = APIRouter()
 

@@ -1,9 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from initializations_and_declarations.db_initialization import supabase
-from initializations_and_declarations.premium_game_data_declarations import INITIAL_PREMIUM_GAME_DATA
-from initializations_and_declarations.game_data_declarations import INITIAL_GAME_DATA
-
+from db.client import supabase
+from data.game_data import INITIAL_GAME_DATA
+from data.premium_game_data import INITIAL_PREMIUM_GAME_DATA
 
 router = APIRouter()
 
@@ -14,7 +13,6 @@ class SignUpRequest(BaseModel):
 
 @router.post("/signup")
 def signup(body: SignUpRequest):
-  # auth table
   try:
     auth_result = supabase.auth.admin.create_user({
       "email": body.email,
@@ -36,7 +34,6 @@ def signup(body: SignUpRequest):
 
   user_id = auth_result.user.id
 
-  # user data table
   try:
     supabase.table("User_Login_Data").insert({
       "id": user_id,
@@ -46,14 +43,12 @@ def signup(body: SignUpRequest):
     }).execute()
   except Exception as e:
     print(f"[signup] User_Login_Data insert error: {e}")
-    # roll back the auth user so we don't leave an orphaned account
     supabase.auth.admin.delete_user(user_id)
     msg = str(e).lower()
     if "duplicate" in msg or "unique" in msg:
       raise HTTPException(status_code=409, detail="Username already taken")
     raise HTTPException(status_code=500, detail=f"Failed to save account data: {e}")
 
-  # create_user (admin API) doesn't produce a session, so sign in explicitly to get a JWT
   try:
     auth_result = supabase.auth.sign_in_with_password({"email": body.email, "password": body.password})
   except Exception as e:

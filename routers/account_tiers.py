@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from initializations_and_declarations.account_tier_declarations import ACCOUNT_TIERS
+from data.account_tiers import ACCOUNT_TIERS
 
 router = APIRouter()
 

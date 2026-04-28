@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Literal
 from datetime import datetime, timezone
-from utils import require_user, spend_tokens, add_tokens, spend_cookies, add_cookies
-from initializations_and_declarations.db_initialization import supabase
+from db.client import supabase
+from services.auth import require_user
+from services.tokens import add_tokens, spend_tokens
+from services.cookies import add_cookies, spend_cookies
 
 router = APIRouter()
 

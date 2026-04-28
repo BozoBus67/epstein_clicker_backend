@@ -2,6 +2,7 @@ INITIAL_PREMIUM_GAME_DATA = {
   "tokens": 0,
   "account_tier": "free",
   "login_streak": 0,
+  "last_login_date": None,
   "mastery_scroll_1": 0,
   "mastery_scroll_2": 0,
   "mastery_scroll_3": 0,
