@@ -1,0 +1,15 @@
+BUILDINGS = [
+  {"key": "building_1",  "display_name": "Cursor",                "cost": 1,      "cps": 1},
+  {"key": "building_2",  "display_name": "Diddy Factory",         "cost": 3,      "cps": 2},
+  {"key": "building_3",  "display_name": "Baby Oil Factory",      "cost": 9,      "cps": 4},
+  {"key": "building_4",  "display_name": "Mega Diddy Factory",    "cost": 27,     "cps": 8},
+  {"key": "building_5",  "display_name": "NYC Apartment",         "cost": 81,     "cps": 16},
+  {"key": "building_6",  "display_name": "Mexico House",          "cost": 243,    "cps": 32},
+  {"key": "building_7",  "display_name": "Gulfstream Jet",        "cost": 729,    "cps": 64},
+  {"key": "building_8",  "display_name": "Private Island Runway", "cost": 2187,   "cps": 128},
+  {"key": "building_9",  "display_name": "Shell Company Empire",  "cost": 6561,   "cps": 256},
+  {"key": "building_10", "display_name": "Offshore Money Network","cost": 19683,  "cps": 512},
+  {"key": "building_11", "display_name": "Media Control Machine", "cost": 59049,  "cps": 1024},
+  {"key": "building_12", "display_name": "Global Lobbying Force", "cost": 177147, "cps": 2048},
+  {"key": "building_13", "display_name": "World Influence Grid",  "cost": 531441, "cps": 4096},
+]
