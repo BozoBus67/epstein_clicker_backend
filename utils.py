@@ -112,5 +112,5 @@ def spend_cookies(user_uuid: str, amount: int):
 def get_random_scroll_id() -> str:
   return random.choice(list(MASTERY_SCROLLS.keys()))
 
-def generate_slot_sequence(count: int, length: int) -> list[list[int]]:
-  return [[random.randint(0, count - 1) for _ in range(length)] for _ in range(3)]
+def generate_slot_sequence(count: int, length: int, rows: int = 3) -> list[list[int]]:
+  return [[random.randint(0, count - 1) for _ in range(length)] for _ in range(rows)]
