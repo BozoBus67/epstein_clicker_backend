@@ -1,3 +1,5 @@
+SLOT_REEL_LENGTH = 10
+
 MASTERY_SCROLL_1_NAME = "mastery_scroll_1"
 MASTERY_SCROLL_2_NAME = "mastery_scroll_2"
 MASTERY_SCROLL_3_NAME = "mastery_scroll_3"
@@ -8,6 +10,7 @@ MASTERY_SCROLL_7_NAME = "mastery_scroll_7"
 MASTERY_SCROLL_8_NAME = "mastery_scroll_8"
 MASTERY_SCROLL_9_NAME = "mastery_scroll_9"
 MASTERY_SCROLL_10_NAME = "mastery_scroll_10"
+
 
 ACCOUNT_TIER_0_ID = "free"
 ACCOUNT_TIER_1_ID = "account_tier_1"

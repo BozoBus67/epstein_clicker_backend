@@ -58,4 +58,4 @@ def login(body: LoginRequest):
   user["email"] = email
   user["game_data"] = migrate_game_data(user["game_data"])
 
-  return {"status": "ok", "jwt": jwt, "user": user}
+  return {"status": "ok", "jwt": jwt, "refresh_token": auth_result.session.refresh_token, "user": user}
