@@ -73,6 +73,7 @@ def signup(body: SignUpRequest):
   return {
     "status": "ok",
     "jwt": auth_result.session.access_token,
+    "refresh_token": auth_result.session.refresh_token,
     "user": {
       "id": user_id,
       "username": body.username,
