@@ -13,4 +13,5 @@ INITIAL_PREMIUM_GAME_DATA = {
   "mastery_scroll_8": 0,
   "mastery_scroll_9": 0,
   "mastery_scroll_10": 0,
+  "redeemed": {},
 }

@@ -2,6 +2,7 @@ import re
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from services.auth import require_user
+from db.client import supabase
 from services.tokens import add_tokens
 
 router = APIRouter()
@@ -29,8 +30,13 @@ class ThreeAssumptionsRequest(BaseModel):
 
 @router.post("/three_assumptions_poisson")
 def three_assumptions_poisson(body: ThreeAssumptionsRequest, user=Depends(require_user)):
+  pgd = supabase.table("User_Login_Data").select("premium_game_data").eq("id", user.id).single().execute().data["premium_game_data"]
+  if pgd.get("redeemed", {}).get("poisson"):
+    return {"correct": False, "already_redeemed": True}
   submitted = {normalize(body.answer_1), normalize(body.answer_2), normalize(body.answer_3)}
   if submitted not in VALID_ANSWER_SETS:
     return {"correct": False}
-  add_tokens(user.id, REWARD)
+  pgd["tokens"] = pgd["tokens"] + REWARD
+  pgd.setdefault("redeemed", {})["poisson"] = True
+  supabase.table("User_Login_Data").update({"premium_game_data": pgd}).eq("id", user.id).execute()
   return {"correct": True, "tokens_awarded": REWARD}
