@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from services.auth import require_user
 from db.client import supabase
-from services.tokens import add_tokens
 
 router = APIRouter()
 
