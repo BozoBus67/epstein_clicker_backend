@@ -29,13 +29,13 @@ class ThreeAssumptionsRequest(BaseModel):
 
 @router.post("/three_assumptions_poisson")
 def three_assumptions_poisson(body: ThreeAssumptionsRequest, user=Depends(require_user)):
-  pgd = supabase.table("User_Login_Data").select("premium_game_data").eq("id", user.id).single().execute().data["premium_game_data"]
-  if pgd.get("redeemed", {}).get("poisson"):
-    return {"correct": False, "already_redeemed": True}
   submitted = {normalize(body.answer_1), normalize(body.answer_2), normalize(body.answer_3)}
   if submitted not in VALID_ANSWER_SETS:
     return {"correct": False}
+  pgd = supabase.table("User_Login_Data").select("premium_game_data").eq("id", user.id).single().execute().data["premium_game_data"]
+  if pgd.get("redeemed", {}).get("poisson"):
+    return {"correct": True, "already_redeemed": True}
   pgd["tokens"] = pgd["tokens"] + REWARD
   pgd.setdefault("redeemed", {})["poisson"] = True
   supabase.table("User_Login_Data").update({"premium_game_data": pgd}).eq("id", user.id).execute()
-  return {"correct": True, "tokens_awarded": REWARD}
+  return {"correct": True, "already_redeemed": False, "tokens_awarded": REWARD}
