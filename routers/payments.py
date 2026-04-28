@@ -7,7 +7,7 @@ STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
 router = APIRouter()
 
-@router.post("/buy_tokens_webhook")
+@router.post("/buy_tokens")
 async def stripe_webhook(request: Request):
   payload = await request.body()
   sig_header = request.headers.get("stripe-signature")
