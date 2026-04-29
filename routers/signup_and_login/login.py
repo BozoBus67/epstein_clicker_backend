@@ -1,5 +1,7 @@
+import os
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from supabase import create_client, ClientOptions
 from db.client import supabase
 from services.game_data import migrate_game_data
 
@@ -25,7 +27,13 @@ def login(body: LoginRequest):
     email = auth_user.user.email
 
   try:
-    auth_result = supabase.auth.sign_in_with_password({"email": email, "password": body.password})
+    # Use a fresh client for sign_in so it doesn't pollute the global client's session state
+    login_client = create_client(
+      os.getenv("SUPABASE_URL"),
+      os.getenv("SUPABASE_SECRET_KEY"),
+      options=ClientOptions(auto_refresh_token=False, persist_session=False),
+    )
+    auth_result = login_client.auth.sign_in_with_password({"email": email, "password": body.password})
   except Exception as e:
     print(f"[login] sign_in_with_password error: {e}")
     msg = str(e)

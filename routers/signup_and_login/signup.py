@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from supabase import create_client, ClientOptions
 from db.client import supabase
 from data.game_data import INITIAL_GAME_DATA
 from data.premium_game_data import INITIAL_PREMIUM_GAME_DATA
@@ -64,7 +65,12 @@ def signup(body: SignUpRequest):
 
   # Step 3: auto-login so the user lands in the game immediately after signup
   try:
-    auth_result = supabase.auth.sign_in_with_password({"email": body.email, "password": body.password})
+    login_client = create_client(
+      os.getenv("SUPABASE_URL"),
+      os.getenv("SUPABASE_SECRET_KEY"),
+      options=ClientOptions(auto_refresh_token=False, persist_session=False),
+    )
+    auth_result = login_client.auth.sign_in_with_password({"email": body.email, "password": body.password})
   except Exception as e:
     print(f"[signup] post-signup sign_in error: {e}")
     raise HTTPException(status_code=500, detail=f"Account created but auto-login failed: {e}")
