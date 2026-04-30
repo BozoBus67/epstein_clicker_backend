@@ -33,6 +33,20 @@ def update_username(body: UpdateUsernameRequest, user=Depends(require_user)):
   supabase.table("User_Login_Data").update({"username": username}).eq("id", user.id).execute()
   return {"username": username}
 
+class UpdateThemeRequest(BaseModel):
+  theme: str
+
+@router.patch("/me/theme")
+def update_theme(body: UpdateThemeRequest, user=Depends(require_user)):
+  if body.theme not in ("light", "dark"):
+    raise HTTPException(status_code=400, detail="theme must be 'light' or 'dark'")
+  pgd = supabase.table("User_Login_Data").select("premium_game_data").eq("id", user.id).single().execute().data["premium_game_data"]
+  if body.theme == "dark" and pgd.get("mastery_scroll_12", 0) < 1:
+    raise HTTPException(status_code=403, detail="You need at least 1 George Floyd mastery scroll to unlock dark mode.")
+  pgd["theme"] = body.theme
+  supabase.table("User_Login_Data").update({"premium_game_data": pgd}).eq("id", user.id).execute()
+  return {"theme": body.theme}
+
 @router.get("/my_discord")
 def my_discord(user=Depends(require_user)):
   result = supabase.table("User_Login_Data").select("premium_game_data").eq("id", user.id).single().execute()
