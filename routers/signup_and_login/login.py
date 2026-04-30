@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from supabase import create_client, ClientOptions
 from db.client import supabase
-from services.game_data import migrate_game_data
+from services.migrations import ensure_user_data_complete
 
 router = APIRouter()
 
@@ -48,12 +48,13 @@ def login(body: LoginRequest):
   user_id = auth_result.user.id
   jwt = auth_result.session.access_token
 
+  ensure_user_data_complete(user_id)
+
   result = supabase.table("User_Login_Data").select("*").eq("id", user_id).execute()
   if not result.data:
     raise HTTPException(status_code=404, detail="Account data not found — contact support")
 
   user = result.data[0]
   user["email"] = auth_result.user.email
-  user["game_data"] = migrate_game_data(user["game_data"])
 
   return {"status": "ok", "jwt": jwt, "refresh_token": auth_result.session.refresh_token, "user": user}
