@@ -29,3 +29,11 @@ def update_username(body: UpdateUsernameRequest, user=Depends(require_user)):
     raise HTTPException(status_code=409, detail="Username already taken")
   supabase.table("User_Login_Data").update({"username": username}).eq("id", user.id).execute()
   return {"username": username}
+
+@router.get("/my_discord")
+def my_discord(user=Depends(require_user)):
+  result = supabase.table("User_Login_Data").select("premium_game_data").eq("id", user.id).single().execute()
+  tier = int(result.data["premium_game_data"]["account_tier"].replace("account_tier_", ""))
+  if tier < 5:
+    raise HTTPException(status_code=403, detail="You must be Luxurious tier or higher for this")
+  return {"discord": "thehandsomeguy67410"}
