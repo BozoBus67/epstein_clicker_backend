@@ -30,6 +30,8 @@ def buy_account_tier(body: BuyTierRequest, user=Depends(require_user)):
 
   if target_index <= current_index:
     raise HTTPException(status_code=400, detail="You already have this tier or higher")
+  if target_index != current_index + 1:
+    raise HTTPException(status_code=400, detail="You must buy the previous tier first")
 
   price = TIER_PRICE[body.tier_id]
   if pgd["tokens"] < price:
