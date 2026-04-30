@@ -96,4 +96,5 @@ def cancel_listing(body: ListingRequest, user=Depends(require_user)):
 
   supabase.table("Auction_House").delete().eq("id", body.listing_id).execute()
 
-  return {"status": "ok", "listing": listing}
+  user_data = supabase.table("User_Login_Data").select("game_data, premium_game_data").eq("id", user.id).single().execute().data
+  return {"status": "ok", "listing": listing, "game_data": user_data["game_data"], "premium_game_data": user_data["premium_game_data"]}
