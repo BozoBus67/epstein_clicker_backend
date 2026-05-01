@@ -33,4 +33,5 @@ INITIAL_PREMIUM_GAME_DATA = {
   "mastery_scroll_24": 0,
   "redeemed": {},
   "theme": "light",
+  "chess_beaten_bots": [],
 }

@@ -17,6 +17,7 @@ from routers.signup_and_login.me import router as me_router
 from routers.account_tiers import router as account_tiers_router
 from routers.game_data import router as game_data_router
 from routers.gamble import router as gamble_router
+from routers.chess import router as chess_router
 from routers.redeem.three_assumptions_poisson import router as three_assumptions_poisson_router
 from routers.buildings import router as buildings_router
 
@@ -39,6 +40,7 @@ app.include_router(me_router)
 app.include_router(account_tiers_router)
 app.include_router(game_data_router)
 app.include_router(gamble_router)
+app.include_router(chess_router)
 app.include_router(three_assumptions_poisson_router)
 app.include_router(buildings_router)
 
