@@ -39,11 +39,13 @@ class UpdateThemeRequest(BaseModel):
 
 @router.patch("/me/theme")
 def update_theme(body: UpdateThemeRequest, user=Depends(require_user)):
-  if body.theme not in ("light", "dark"):
-    raise HTTPException(status_code=400, detail="theme must be 'light' or 'dark'")
+  if body.theme not in ("default", "light", "dark"):
+    raise HTTPException(status_code=400, detail="theme must be 'default', 'light', or 'dark'")
   pgd = supabase.table("User_Login_Data").select("premium_game_data").eq("id", user.id).single().execute().data["premium_game_data"]
   if body.theme == "dark" and pgd["mastery_scroll_12"] < 1:
     raise HTTPException(status_code=403, detail="You need at least 1 George Floyd mastery scroll to unlock dark mode.")
+  if body.theme == "light" and pgd["mastery_scroll_21"] < 1:
+    raise HTTPException(status_code=403, detail="You need at least 1 State Trooper mastery scroll to unlock light mode.")
   pgd["theme"] = body.theme
   supabase.table("User_Login_Data").update({"premium_game_data": pgd}).eq("id", user.id).execute()
   return {"theme": body.theme}
