@@ -1,6 +1,6 @@
-from db.client import supabase
-from data.premium_game_data import INITIAL_PREMIUM_GAME_DATA
 from data.game_data import INITIAL_GAME_DATA
+from data.premium_game_data import INITIAL_PREMIUM_GAME_DATA
+from db.client import supabase
 
 def ensure_user_data_complete(user_uuid: str) -> dict:
   """Reconcile a user's stored game_data and premium_game_data with the canonical

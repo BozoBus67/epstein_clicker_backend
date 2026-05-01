@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+
 from db.client import supabase
 from services.auth import require_user
 from services.migrations import ensure_user_data_complete

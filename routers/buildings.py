@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+
 from data.buildings import BUILDINGS
 
 router = APIRouter()

@@ -1,11 +1,14 @@
 import random
+
 from fastapi import APIRouter, Depends
-from services.auth import require_user
-from services.tokens import spend_tokens
-from services.scrolls import increase_mastery_scroll
-from services.slots import generate_slot_sequence, compute_wins
+
+from constants.constants import SLOT_ALPHABET_SIZE, SLOT_REEL_LENGTH
 from data.scrolls import MASTERY_SCROLLS
-from constants.constants import SLOT_REEL_LENGTH, SLOT_ALPHABET_SIZE
+from services.analytics import capture as analytics_capture
+from services.auth import require_user
+from services.scrolls import increase_mastery_scroll
+from services.slots import compute_wins, generate_slot_sequence
+from services.tokens import spend_tokens
 
 router = APIRouter()
 
@@ -32,6 +35,8 @@ def spin(user=Depends(require_user)):
   for win in wins:
     increase_mastery_scroll(user.id, win["scroll_id"], win["amount"])
 
+  analytics_capture(distinct_id=user.id, event="gamble_spin")
+
   return {"sequences": sequences, "subset_indices": subset_indices, "tokens_remaining": tokens_remaining, "wins": wins}
 
 @router.post("/roulette_spin")
@@ -39,4 +44,7 @@ def roulette_spin(user=Depends(require_user)):
   tokens_remaining = spend_tokens(user.id, ROULETTE_SPIN_COST)
   scroll_id = random.choice(SCROLL_KEYS)
   increase_mastery_scroll(user.id, scroll_id, ROULETTE_REWARD_AMOUNT)
+
+  analytics_capture(distinct_id=user.id, event="roulette_spin")
+
   return {"tokens_remaining": tokens_remaining, "scroll_id": scroll_id}

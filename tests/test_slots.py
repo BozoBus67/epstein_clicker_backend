@@ -1,4 +1,5 @@
 import pytest
+
 from services.slots import compute_wins
 
 REWARDS = {2: 1, 3: 3, 4: 10, 5: 100}

@@ -4,3 +4,4 @@ stripe
 supabase
 python-dotenv
 httpx
+posthog

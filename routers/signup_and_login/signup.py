@@ -1,11 +1,13 @@
+import os
+
+import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from supabase import create_client, ClientOptions
-from db.client import supabase
+
 from data.game_data import INITIAL_GAME_DATA
 from data.premium_game_data import INITIAL_PREMIUM_GAME_DATA
-import httpx
-import os
+from db.client import supabase
 
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 

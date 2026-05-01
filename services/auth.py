@@ -1,4 +1,5 @@
 from fastapi import HTTPException, Header
+
 from db.client import supabase
 
 def require_user(authorization: str = Header(...)):

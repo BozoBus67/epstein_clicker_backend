@@ -1,4 +1,5 @@
 from fastapi import HTTPException
+
 from db.client import supabase
 
 def add_cookies(user_uuid: str, amount: int):

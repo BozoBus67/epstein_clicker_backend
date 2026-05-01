@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Request, HTTPException
-import stripe
 import os
+
+import stripe
+from fastapi import APIRouter, HTTPException, Request
+
 from db.client import supabase
 
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
 router = APIRouter()
 
-@router.post("/buy_tokens")
+@router.post("/stripe_webhook")
 async def stripe_webhook(request: Request):
   payload = await request.body()
   sig_header = request.headers.get("stripe-signature")

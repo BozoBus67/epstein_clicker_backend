@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+
+from data.scrolls import MASTERY_SCROLLS
 from db.client import supabase
 from services.auth import require_user
-from data.scrolls import MASTERY_SCROLLS
 
 router = APIRouter()
 

@@ -1,7 +1,9 @@
 import os
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from supabase import create_client, ClientOptions
+
 from db.client import supabase
 from services.migrations import ensure_user_data_complete
 
