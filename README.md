@@ -55,10 +55,8 @@ The backend works but is rough around the edges. Before adding more features, co
 
    Fix paths, in order of effort: a Postgres RPC function that does `update ... set premium_game_data = jsonb_set(premium_game_data, '{tokens}', (premium_game_data->>'tokens')::int + $1)` atomically; or pull the high-churn fields out of JSONB into proper columns and use `update users set tokens = tokens + $1`; or wrap each endpoint in a row-level lock (`select ... for update`) inside a transaction.
 
-2. **Tracked `__pycache__/`.** `.pyc` files were committed before `__pycache__/` was added to `.gitignore`, so they're still tracked. Run `git rm -r --cached '**/__pycache__'` (and commit) to stop tracking them — they show up as noise in every diff.
+2. **No type annotations on most service functions.** Adding return types and arg types would let `mypy` (or just IDE inference) catch the kind of "forgot to handle a None" bug that currently only surfaces at runtime.
 
-3. **No type annotations on most service functions.** Adding return types and arg types would let `mypy` (or just IDE inference) catch the kind of "forgot to handle a None" bug that currently only surfaces at runtime.
-
-4. **No automatic migration runner / migration tests.** `services/migrations.py::ensure_user_data_complete` runs at login and the refresh button, which works but isn't a real migration system. As schema evolves, it'd be cleaner to have a `scripts/generate_migration.py` that creates dated migration files plus pytest cases for each. Listed here so we don't forget — `scripts/migrate_free_tier.py` was deleted as dead weight (it converted the old `account_tier == "free"` to `"account_tier_0"` and is no longer needed).
+3. **No automatic migration runner / migration tests.** `services/migrations.py::ensure_user_data_complete` runs at login and the refresh button, which works but isn't a real migration system. As schema evolves, it'd be cleaner to have a `scripts/generate_migration.py` that creates dated migration files plus pytest cases for each. Listed here so we don't forget — `scripts/migrate_free_tier.py` was deleted as dead weight (it converted the old `account_tier == "free"` to `"account_tier_0"` and is no longer needed).
 
 When picking up any of these, think about the *root cause* before patching the symptom (especially #1 — it's tempting to put a try/except around the symptom, but that just hides the corruption).
