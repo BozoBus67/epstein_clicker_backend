@@ -18,6 +18,7 @@ from routers.gamble import router as gamble_router
 from routers.game_data import router as game_data_router
 from routers.mastery_scrolls import router as mastery_scrolls_router
 from routers.payments import router as stripe_webhook_router
+from routers.redeem.promotion_oath import router as promotion_oath_router
 from routers.redeem.three_assumptions_poisson import router as three_assumptions_poisson_router
 from routers.signup_and_login.login import router as login_router
 from routers.signup_and_login.me import router as me_router
@@ -46,6 +47,7 @@ app.include_router(game_data_router)
 app.include_router(gamble_router)
 app.include_router(chess_router)
 app.include_router(three_assumptions_poisson_router)
+app.include_router(promotion_oath_router)
 app.include_router(buildings_router)
 app.include_router(analytics_router)
 app.include_router(youtube_router)
