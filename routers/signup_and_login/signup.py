@@ -11,10 +11,6 @@ from data.premium_game_data import INITIAL_PREMIUM_GAME_DATA
 from db.client import supabase
 
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
-# Optional. When set, the signup notification will mention this Discord user
-# so they get a real push notification instead of a quiet channel post. Get
-# your ID via Discord settings → Advanced → Developer Mode → right-click your
-# name → Copy User ID. Leave unset to skip the ping.
 DISCORD_PING_USER_ID = os.getenv("DISCORD_PING_USER_ID")
 
 def notify_discord_signup(username: str, email: str):

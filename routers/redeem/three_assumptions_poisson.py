@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from db.client import supabase
+from services.analytics import capture as analytics_capture
 from services.auth import require_user
 
 router = APIRouter()
@@ -33,6 +34,10 @@ def three_assumptions_poisson(body: ThreeAssumptionsRequest, user=Depends(requir
   submitted = {normalize(body.answer_1), normalize(body.answer_2), normalize(body.answer_3)}
   if submitted != VALID_ANSWERS:
     return {"correct": False}
+  # Track every correct submission, not just the first one — gives us a sense
+  # of how many people figured out the meme. Already-redeemed retries still
+  # count as "they got it right."
+  analytics_capture(distinct_id=user.id, event="poisson_correct")
   pgd = supabase.table("User_Login_Data").select("premium_game_data").eq("id", user.id).single().execute().data["premium_game_data"]
   if pgd["redeemed"].get("poisson"):
     return {"correct": True, "already_redeemed": True}
