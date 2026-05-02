@@ -1,4 +1,4 @@
-> ⚠️ AI-generated, not yet proofread by a human. Treat as tech debt.
+> AI-generated, proofread and edited (by human).
 
 # Backend
 
