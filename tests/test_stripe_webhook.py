@@ -7,6 +7,7 @@ Validation rules:
   - Missing amount_total        → 400, no DB write
   - Zero / negative amount      → 400, no DB write
   - Happy path                  → tokens credited at amount_total // 100
+  - Replayed event              → 200 already_processed, no DB write
 """
 import asyncio
 import copy
@@ -83,7 +84,7 @@ def test_missing_client_reference_id_400(patched, monkeypatch):
   session = SimpleNamespace(client_reference_id=None, amount_total=999)
   monkeypatch.setattr(
     payments.stripe.Webhook, "construct_event",
-    lambda *a, **k: {"type": "checkout.session.completed", "data": {"object": session}},
+    lambda *a, **k: {"id": "evt_test", "type": "checkout.session.completed", "data": {"object": session}},
   )
 
   with pytest.raises(HTTPException) as exc:
@@ -99,7 +100,7 @@ def test_missing_amount_total_400(patched, monkeypatch):
   session = SimpleNamespace(client_reference_id="user-1", amount_total=None)
   monkeypatch.setattr(
     payments.stripe.Webhook, "construct_event",
-    lambda *a, **k: {"type": "checkout.session.completed", "data": {"object": session}},
+    lambda *a, **k: {"id": "evt_test", "type": "checkout.session.completed", "data": {"object": session}},
   )
 
   with pytest.raises(HTTPException) as exc:
@@ -115,7 +116,7 @@ def test_zero_amount_rejected(patched, monkeypatch):
   session = SimpleNamespace(client_reference_id="user-1", amount_total=50)
   monkeypatch.setattr(
     payments.stripe.Webhook, "construct_event",
-    lambda *a, **k: {"type": "checkout.session.completed", "data": {"object": session}},
+    lambda *a, **k: {"id": "evt_test", "type": "checkout.session.completed", "data": {"object": session}},
   )
   fake.row = _user_row(tokens=10)
 
@@ -133,7 +134,7 @@ def test_happy_path_credits_tokens(patched, monkeypatch):
   session = SimpleNamespace(client_reference_id="user-1", amount_total=500)
   monkeypatch.setattr(
     payments.stripe.Webhook, "construct_event",
-    lambda *a, **k: {"type": "checkout.session.completed", "data": {"object": session}},
+    lambda *a, **k: {"id": "evt_test", "type": "checkout.session.completed", "data": {"object": session}},
   )
   fake.row = _user_row(tokens=10)
 
@@ -149,7 +150,7 @@ def test_credits_correct_token_count_at_round_dollar(patched, monkeypatch):
   session = SimpleNamespace(client_reference_id="user-1", amount_total=2500)
   monkeypatch.setattr(
     payments.stripe.Webhook, "construct_event",
-    lambda *a, **k: {"type": "checkout.session.completed", "data": {"object": session}},
+    lambda *a, **k: {"id": "evt_test", "type": "checkout.session.completed", "data": {"object": session}},
   )
   fake.row = _user_row(tokens=0)
 
@@ -157,3 +158,37 @@ def test_credits_correct_token_count_at_round_dollar(patched, monkeypatch):
 
   assert result["status"] == "ok"
   assert fake.last_update["premium_game_data"]["tokens"] == 25
+
+
+def test_replayed_event_returns_already_processed_no_credit(patched, monkeypatch):
+  """Stripe retries can re-deliver the same event.id; we must not double-credit."""
+  payments, fake = patched
+  session = SimpleNamespace(client_reference_id="user-1", amount_total=500)
+  monkeypatch.setattr(
+    payments.stripe.Webhook, "construct_event",
+    lambda *a, **k: {"id": "evt_already_seen", "type": "checkout.session.completed", "data": {"object": session}},
+  )
+  fake.row = _user_row(tokens=10)
+  fake.processed_event_ids = ["evt_already_seen"]  # idempotency table already contains it
+
+  result = _run(payments.stripe_webhook(_request_with()))
+
+  assert result["status"] == "already_processed"
+  assert result["event_id"] == "evt_already_seen"
+  assert fake.last_update is None    # no credit applied
+  assert fake.last_insert is None    # no new insert into the events table either
+
+
+def test_happy_path_marks_event_processed(patched, monkeypatch):
+  """After a successful credit the event id should be persisted so a retry skips."""
+  payments, fake = patched
+  session = SimpleNamespace(client_reference_id="user-1", amount_total=500)
+  monkeypatch.setattr(
+    payments.stripe.Webhook, "construct_event",
+    lambda *a, **k: {"id": "evt_unique_999", "type": "checkout.session.completed", "data": {"object": session}},
+  )
+  fake.row = _user_row(tokens=0)
+
+  _run(payments.stripe_webhook(_request_with()))
+
+  assert fake.last_insert == {"event_id": "evt_unique_999"}

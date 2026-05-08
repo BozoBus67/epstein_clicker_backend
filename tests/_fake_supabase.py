@@ -20,14 +20,18 @@ class Fake_Supabase:
     self.last_update = None     # the payload the code tried to persist
     self.last_insert = None
     self.last_delete = False
+    # Idempotency-tracking table. Tests that want to simulate "this event has
+    # already been processed" set this to a list of event ids.
+    self.processed_event_ids = []
 
-  def table(self, _name):
-    return _Fake_Table(self)
+  def table(self, name):
+    return _Fake_Table(self, name)
 
 
 class _Fake_Table:
-  def __init__(self, parent):
+  def __init__(self, parent, name):
     self.parent = parent
+    self.name = name
     self.mode = "select"        # "select" | "update" | "insert" | "delete"
     self.update_payload = None
     self.insert_payload = None
@@ -69,7 +73,12 @@ class _Fake_Table:
     if self.mode == "delete":
       self.parent.last_delete = True
       return _Fake_Result(data=None)
-    # select: prefer .row (single) when present, else fall back to list
+    # select: special-case the idempotency-tracking table so a generic
+    # parent.row meant for User_Login_Data doesn't accidentally satisfy the
+    # "have we seen this event?" check in the Stripe webhook handler.
+    if self.name == "Stripe_Processed_Events":
+      return _Fake_Result(data=[{"event_id": eid} for eid in self.parent.processed_event_ids])
+    # generic select: prefer .row (single) when present, else fall back to list
     if self.parent.row is not None:
       return _Fake_Result(data=self.parent.row)
     return _Fake_Result(data=self.parent.rows)
