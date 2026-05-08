@@ -1,20 +1,41 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from data.game_data import INITIAL_GAME_DATA
+from data.premium_game_data import INITIAL_PREMIUM_GAME_DATA
 from db.client import supabase
 from services.auth import require_user
 from services.migrations import ensure_user_data_complete
 
 router = APIRouter()
 
+# Anonymous users (Supabase signInAnonymously) hit /me with a valid JWT but
+# no User_Login_Data row yet — guests are real auth users created on first
+# page load, but the game-data row is created here on first contact. The
+# `guest_<prefix>` username is unique because it's keyed off the user uuid.
+def ensure_user_login_data_row(user) -> bool:
+  existing = supabase.table("User_Login_Data").select("id").eq("id", user.id).execute()
+  if existing.data:
+    return False
+  guest_username = f"guest_{user.id[:8]}"
+  supabase.table("User_Login_Data").insert({
+    "id": user.id,
+    "username": guest_username,
+    "game_data": INITIAL_GAME_DATA,
+    "premium_game_data": INITIAL_PREMIUM_GAME_DATA,
+  }).execute()
+  return True
+
 @router.get("/me")
 def me(user=Depends(require_user)):
+  ensure_user_login_data_row(user)
   migration_result = ensure_user_data_complete(user.id)
   result = supabase.table("User_Login_Data").select("*").eq("id", user.id).execute()
   if not result.data:
     raise HTTPException(status_code=404, detail="Account data not found")
   row = result.data[0]
   row["email"] = user.email
+  row["is_anonymous"] = bool(getattr(user, "is_anonymous", False))
   return {
     "user": row,
     "migration_info": migration_result if migration_result["migrated"] else None,

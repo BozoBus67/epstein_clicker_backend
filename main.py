@@ -22,6 +22,7 @@ from routers.redeem.three_assumptions_poisson import router as three_assumptions
 from routers.signup_and_login.login import router as login_router
 from routers.signup_and_login.me import router as me_router
 from routers.signup_and_login.signup import router as signup_router
+from routers.signup_and_login.upgrade_anon import router as upgrade_anon_router
 from routers.tokens import router as tokens_router
 from routers.youtube import router as youtube_router
 
@@ -40,6 +41,7 @@ app.include_router(auction_house_router)
 app.include_router(signup_router)
 app.include_router(login_router)
 app.include_router(me_router)
+app.include_router(upgrade_anon_router)
 app.include_router(account_tiers_router)
 app.include_router(game_data_router)
 app.include_router(gamble_router)
