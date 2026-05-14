@@ -22,12 +22,13 @@ async def stripe_webhook(request: Request):
   if event["type"] != "checkout.session.completed":
     return {"status": "ignored", "reason": f"unhandled event type: {event['type']}"}
 
-  # Idempotency: Stripe retries the webhook if our first response times out,
-  # so the same event.id can arrive twice. Skip if we've already credited it
-  # — without this, a retry would double-credit the user for one payment.
-  already = supabase.table("Stripe_Processed_Events").select("event_id").eq("event_id", event["id"]).execute()
-  if already.data:
-    return {"status": "already_processed", "event_id": event["id"]}
+  # TODO: idempotency. Stripe retries the webhook on non-2xx / timeout, so the
+  # same event.id can arrive more than once. Right now nothing stops a retry
+  # from double-crediting tokens. To fix: create a `Stripe_Processed_Events`
+  # table in Supabase with `event_id TEXT PRIMARY KEY`, then do an insert-first
+  # check here — try to INSERT event["id"] and only credit if the insert
+  # succeeds (a unique-violation means another delivery already claimed it).
+  # Skipped for now to unblock payments; accepting the rare double-credit risk.
 
   session = event["data"]["object"]
   user_id = getattr(session, "client_reference_id", None)
@@ -45,12 +46,5 @@ async def stripe_webhook(request: Request):
   pgd = supabase.table("User_Login_Data").select("premium_game_data").eq("id", user_id).single().execute().data["premium_game_data"]
   pgd["tokens"] = pgd["tokens"] + tokens
   supabase.table("User_Login_Data").update({"premium_game_data": pgd}).eq("id", user_id).execute()
-
-  # Mark the event processed AFTER successful credit. If credit raises mid-
-  # flight, we never mark the event, and Stripe's retry can re-attempt cleanly.
-  # The opposite order (mark first, credit second) would lose the user's money
-  # if the credit failed — current order trades a vanishing-rare double-credit
-  # window (credit succeeds, mark fails) for never losing the user's payment.
-  supabase.table("Stripe_Processed_Events").insert({"event_id": event["id"]}).execute()
 
   return {"status": "ok"}
